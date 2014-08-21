@@ -1,0 +1,13 @@
+c文件有对应的makefile文件，各个目录介绍如下
+
+dbus-call: 调用desktop现有接口的例子，调用的是org.freedesktop.Notifications，两个c文件分别使用libdbus和dbus-glib
+
+dbus-glib: dbus-glib例子.method call: example-service.c, example-client.c; signal emit: example-signal-emitter.c example-signal-recipient.c
+
+dbus-go: go实现dbus调用的例子。gocode目录下放的是第三方模块，调用指令env GOPATH=gocode路径 go run list-names.go
+
+dbus-node： node调用dbus的第三方库，可参考test目录下的调用方式
+
+dbus-python： python-dbus例子.method call: example-service.c, example-client.c; signal emit: example-signal-emitter.c example-signal-recipient.c
+
+libdbus：只使用dbus库的例子，method call:listen.c, query.c; signal emit: receive.c, send.c
