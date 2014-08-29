@@ -27,6 +27,9 @@ def ItemAdd(interface, protocol, name, stype, domain, flags):
     server.ResolveService(interface, protocol, name, stype, 
         domain, avahi.PROTO_UNSPEC, dbus.UInt32(0), 
         reply_handler=service_resolved, error_handler=print_error)
+    print "===================================="
+    print "parameters in ResolveService:%d, %d, %s, %s, %s, %d, %d" % (interface, protocol, name, stype, domain, avahi.PROTO_UNSPEC, dbus.UInt32(0))
+    print "===================================="
 
 def ItemRemove(interface, protocol, name, stype, domain, flags):
     print "service '%s' type '%s' domain '%s' Remove" % (name, stype, domain)
@@ -49,6 +52,7 @@ print "avahi.DBUS_PATH_SERVER: %s" % (avahi.DBUS_PATH_SERVER)
 print "avahi.DBUS_INTERFACE_SERVER: %s" % (avahi.DBUS_INTERFACE_SERVER)
 print "Service Browser Path: %s" % (service_browser_path)
 print "avahi.DBUS_INTERFACE_SERVICE_BROWSER: %s" % (avahi.DBUS_INTERFACE_SERVICE_BROWSER)
+print "avahi.PROTO_UNSPEC: %s" % (avahi.PROTO_UNSPEC)
 
 sbrowser.connect_to_signal("ItemNew", ItemAdd)
 sbrowser.connect_to_signal("ItemRemove", ItemRemove)
