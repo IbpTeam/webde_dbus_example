@@ -371,7 +371,7 @@ g_message("g_message_iter_get_signature: %s", dbus_message_iter_get_signature(&a
     }
     dbus_message_unref(msg);  
 }
-void signal_itemnew(char *path){
+void signal_ServiceBrowser_item(char *path){
     DBusMessage* msg;
     DBusMessageIter args;
     DBusConnection* conn;
@@ -521,7 +521,7 @@ void signal_itemnew(char *path){
                 dbus_message_iter_get_basic(&args, &flags);
             printf("\n");
             printf("removed:%d, %d, %s, %s, %s, %d.\n", interface, protocol, name, stype, domain, flags);
-            resolve_service(interface, protocol, name, stype, domain);
+            //resolve_service(interface, protocol, name, stype, domain);
         //printf("Got Signal with value %s\n", sigvalue);
         }
             }
@@ -529,8 +529,370 @@ void signal_itemnew(char *path){
     dbus_message_unref(msg);
     }
 }
+char* get_entry_group_path()
+{
+    DBusMessage* msg;
+    DBusMessageIter args;
+    DBusConnection* conn;
+    DBusError err;
+    dbus_error_init(&err);
+    DBusPendingCall* pending;
+    char *entry_group_path;
+
+   // initialiset the errors
+    printf("Calling remote method: %s\n", "org.freedesktop.Avahi");
+
+   // connect to the system bus and check for errors
+    conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+    if (dbus_error_is_set(&err)) { 
+      fprintf(stderr, "Connection Error (%s)\n", err.message); 
+      dbus_error_free(&err);
+    }
+    if (NULL == conn) { 
+      exit(1);
+    }
+
+    msg = dbus_message_new_method_call("org.freedesktop.Avahi",// target for the method call
+                                        "/", 							// object to call on
+                                        "org.freedesktop.Avahi.Server",    // interface to call on
+                                        "EntryGroupNew");             // method nameResolveHostName
+    if (NULL == msg) 
+     { 
+      fprintf(stderr, "Message Null\n"); 
+      exit(1); 
+    }
+   // send message and get a handle for a reply
+    if (!dbus_connection_send_with_reply (conn, msg, &pending, -1)) { // -1 is default timeout
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (NULL == pending) { 
+        fprintf(stderr, "Pending Call Null\n"); 
+        exit(1); 
+    }
+    dbus_connection_flush(conn);
+   
+    printf("Request Sent\n");
+   
+    // free message
+    dbus_message_unref(msg);
+   
+    // block until we recieve a reply
+    dbus_pending_call_block(pending);
+
+    // get the reply message
+    msg = dbus_pending_call_steal_reply(pending);
+    if (NULL == msg) {
+        fprintf(stderr, "Reply Null\n"); 
+        exit(1); 
+    }
+    if (dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_ERROR) {
+			   fprintf("message returned error: %s", dbus_message_get_error_name(msg));
+	}
+    // free the pending message handle
+    dbus_pending_call_unref(pending);
+
+    // read the parameters
+    if (!dbus_message_iter_init(msg, &args))
+        fprintf(stderr, "Message has no arguments!\n"); 
+    else if (DBUS_TYPE_OBJECT_PATH != dbus_message_iter_get_arg_type(&args)) 
+        fprintf(stderr, "Argument is not DBUS_TYPE_OBJECT_PATH!\n"); 
+    else
+        dbus_message_iter_get_basic(&args, &entry_group_path);
+
+
+    printf("Got Reply: %s\n", entry_group_path);
+    dbus_message_unref(msg);  
+    return entry_group_path;
+}
+
+void method_AddService(char *path)
+{
+    DBusMessage* msg;
+    DBusMessageIter args;
+    DBusConnection* conn;
+    DBusError err;
+    dbus_error_init(&err);
+    DBusPendingCall* pending;
+    dbus_int32_t interface = -1;
+    dbus_int32_t protocol = -1;
+    dbus_uint32_t flags = 0;
+    char *name = "xifei";
+    char *type = "_http._tcp";
+    char *domain = "local";
+    char *host = "192.168.160.3";
+    dbus_uint16_t port = 500;
+    char *txt1 = "xifei";
+    char *txt2 = "password of xifei";
+ /*
+    <arg name="interface" type="i" direction="in"/>
+    <arg name="protocol" type="i" direction="in"/>
+    <arg name="flags" type="u" direction="in"/>
+    <arg name="name" type="s" direction="in"/>
+    <arg name="type" type="s" direction="in"/>
+    <arg name="domain" type="s" direction="in"/>
+    <arg name="host" type="s" direction="in"/>
+    <arg name="port" type="q" direction="in"/>
+    <arg name="txt" type="aay" direction="in"/>
+ */
+   // initialiset the errors
+    printf("Calling remote method: %s\n", "org.freedesktop.Avahi.EntryGroup");
+
+   // connect to the system bus and check for errors
+    conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+    if (dbus_error_is_set(&err)) { 
+      fprintf(stderr, "Connection Error (%s)\n", err.message); 
+      dbus_error_free(&err);
+    }
+    if (NULL == conn) { 
+      exit(1);
+    }
+
+    msg = dbus_message_new_method_call("org.freedesktop.Avahi",// target for the method call
+                                        path, 							// object to call on
+                                        "org.freedesktop.Avahi.EntryGroup",    // interface to call on
+                                        "AddService");             // method nameResolveHostName
+    if (NULL == msg) 
+     { 
+      fprintf(stderr, "Message Null\n"); 
+      exit(1); 
+    }
+   // append arguments
+    dbus_message_iter_init_append(msg, &args);
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_INT32, &interface))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_INT32, &protocol))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_UINT32, &flags))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &name))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &type))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &domain))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &host))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    if (!dbus_message_iter_append_basic(&args, DBUS_TYPE_UINT16, &port))
+    {
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+    }
+    /*
+	DBusMessageIter iter_ay, iter_y;
+	// Open dict entry container
+	if (!dbus_message_iter_open_container(&args, DBUS_TYPE_ARRAY, "ay", &iter_ay)) {
+			printf("Can't open container for iter_ay\n");
+			exit(1);
+	}
+	if (!dbus_message_iter_open_container(&iter_ay, DBUS_TYPE_ARRAY, "y", &iter_y)) {
+			printf("Can't open container for iter_y\n");
+			exit(1);
+	}
+	dbus_uint16_t  bb=98;
+	dbus_uint16_t  cc=97;
+	dbus_message_iter_append_basic(&iter_y, DBUS_TYPE_BYTE, &bb);
+	dbus_message_iter_append_basic(&iter_y, DBUS_TYPE_BYTE, &cc);
+	dbus_message_iter_close_container(&iter_ay, &iter_y);
+	dbus_message_iter_close_container(&args, &iter_ay);
+	g_message("signature of iter_ay: %s", dbus_message_iter_get_signature(&iter_ay));
+	g_message("signature of args: %s", dbus_message_iter_get_signature(&args));
+*/
+
+	 DBusMessageIter iter_ay, iter_y;
+  if (!dbus_message_iter_open_container(&args, DBUS_TYPE_ARRAY, "ay", &iter_ay))
+      {
+		printf("Can't open container for iter_ay\n");
+      exit(1);
+      }
+	if (!dbus_message_iter_open_container(&iter_ay, DBUS_TYPE_ARRAY, "y", &iter_y)) {
+			printf("Can't open container for iter_y\n");
+			exit(1);
+	}
+	if (!dbus_message_iter_append_fixed_array (&iter_y, DBUS_TYPE_BYTE, &txt1, sizeof(txt1)))
+	 {
+	     fprintf (stderr, "No memory!\n");
+	}
+	dbus_message_iter_close_container(&iter_ay, &iter_y);
+	dbus_message_iter_close_container(&args, &iter_ay);
+	g_message("arrive here1.");
+	g_message("signature of msg: %s", dbus_message_get_signature(msg));
+//	g_message("signature of iter_ay: %s", dbus_message_iter_get_signature(&iter_ay));
+//	g_message("signature of args: %s", dbus_message_iter_get_signature(&args));
+	
+  // send message and get a handle for a reply
+  if (!dbus_connection_send (conn, msg, NULL)) { // -1 is default timeout
+     fprintf(stderr, "Out Of Memory!\n"); 
+     exit(1);
+     }
+
+    dbus_connection_flush(conn);
+   
+    printf("Request Sent\n");
+   
+    // free message
+    dbus_message_unref(msg);
+}
+void method_GetState(char *path){
+    DBusMessage* msg;
+    DBusMessageIter args;
+    DBusConnection* conn;
+    DBusError err;
+    dbus_error_init(&err);
+    DBusPendingCall* pending;
+    // connect to the system bus and check for errors
+    conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+    if (dbus_error_is_set(&err)) { 
+      fprintf(stderr, "Connection Error (%s)\n", err.message); 
+      dbus_error_free(&err);
+     }
+    if (NULL == conn) { 
+       exit(1);
+     }
+    //char *path = malloc(sizeof(char) * strlen(mpath));
+    //strcpy(path, mpath);
+    //printf("*0mpath: %s / %s\n", path, mpath);
+    msg = dbus_message_new_method_call("org.freedesktop.Avahi",// target for the method call
+                                        path, 							// object to call on
+                                        "org.freedesktop.Avahi.EntryGroup",    // interface to call on
+                                        "GetState");             // method nameResolveHostName
+    //printf("*1mpath: %s / %s\n", path, mpath);
+    if (!dbus_connection_send_with_reply (conn, msg, &pending, -1)) { // -1 is default timeout
+        fprintf(stderr, "Out Of Memory!\n"); 
+        exit(1);
+     }
+    //printf("*2mpath: %s / %s\n", path, mpath);
+    if (NULL == pending) { 
+        fprintf(stderr, "Pending Call Null\n"); 
+        exit(1); 
+     }
+     dbus_connection_flush(conn);
+
+     printf("Request Sent\n");
+
+     // free message
+     dbus_message_unref(msg);
+    
+     // block until we recieve a reply
+     dbus_pending_call_block(pending);
+
+     // get the reply message
+     msg = dbus_pending_call_steal_reply(pending);
+     if (NULL == msg) {
+         fprintf(stderr, "Reply Null\n"); 
+         exit(1); 
+     }
+     // free the pending message handle
+     dbus_pending_call_unref(pending);
+
+     dbus_uint32_t m_state;
+     if (!dbus_message_iter_init(msg, &args)){
+         g_message("dbus_message_iter_init fail\n");
+     }
+     if(dbus_message_get_type(msg) == DBUS_MESSAGE_TYPE_ERROR){
+         char *result;
+         g_message("arg type: %d", dbus_message_iter_get_arg_type(&args));
+         dbus_message_iter_get_basic(&args, &result);
+         g_message("error:  %s", result);    	 
+     }else{
+         if (DBUS_TYPE_INT32 != dbus_message_iter_get_arg_type(&args)) 
+             g_message("Argument is not DBUS_TYPE_INT32!\n"); 
+         else{
+             dbus_message_iter_get_basic(&args, &m_state);
+             printf("m_state : %d\n", m_state);
+         }
+     }
+     dbus_message_unref(msg);
+}
+void method_Commit(char *path){
+    DBusConnection* conn;
+    DBusMessage* msg;
+    DBusError err;
+    dbus_error_init(&err);
+    // connect to the system bus and check for errors
+    conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+    if (dbus_error_is_set(&err)) { 
+      fprintf(stderr, "Connection Error (%s)\n", err.message); 
+      dbus_error_free(&err);
+     }
+     if (NULL == conn) { 
+       exit(1);
+     }
+    msg = dbus_message_new_method_call("org.freedesktop.Avahi",// target for the method call
+                                        path, 							// object to call on
+                                        "org.freedesktop.Avahi.EntryGroup",    // interface to call on
+                                        "Commit");             // method nameResolveHostName
+    if (!dbus_connection_send (conn, msg, NULL)) { //
+       fprintf(stderr, "Out Of Memory!\n"); 
+       exit(1);
+       }
+    dbus_connection_flush(conn);
+    dbus_message_unref(msg);	
+}
+
+void method_Reset(char *path){
+    DBusMessage* msg;
+    DBusConnection* conn;
+    DBusError err;
+    dbus_error_init(&err);
+    // connect to the system bus and check for errors
+     conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);
+     if (dbus_error_is_set(&err)) { 
+       fprintf(stderr, "Connection Error (%s)\n", err.message); 
+       dbus_error_free(&err);
+     }
+     if (NULL == conn) { 
+       exit(1);
+     }
+    msg = dbus_message_new_method_call("org.freedesktop.Avahi",// target for the method call
+                                        path, 							// object to call on
+                                        "org.freedesktop.Avahi.EntryGroup",    // interface to call on
+                                        "Reset");             // method nameResolveHostName
+    if (!dbus_connection_send (conn, msg, NULL)) { // -1 is default timeout
+       fprintf(stderr, "Out Of Memory!\n"); 
+       exit(1);
+       }
+    dbus_connection_flush(conn);
+    dbus_message_unref(msg);	
+}
 void main()
 {
-    signal_itemnew(get_service_browser_path());
+  	 //signal_ServiceBrowser_item(get_service_browser_path());
     //resolve_service();
+    char *entry_group_path = get_entry_group_path();
+    char *mypath = malloc(sizeof(char) * strlen(entry_group_path));
+    strcpy(mypath, entry_group_path);
+/*
+    printf("*mypath: %s / %s\n", mypath, entry_group_path);
+    method_AddService(entry_group_path);
+    printf("*mypath: %s / %s\n", mypath, entry_group_path);
+    method_Commit(entry_group_path);
+    printf("*mypath: %s / %s\n", mypath, entry_group_path);
+*/
+    method_GetState(mypath);
+    printf("*mypath: %s / %s\n", mypath, entry_group_path);
+	//method_Commit(entry_group_path);
+
+	//printf("*entry_group_path: %s\n", entry_group_path);
 }
