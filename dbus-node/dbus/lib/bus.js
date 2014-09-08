@@ -1,5 +1,6 @@
 "usr strict";
 
+var rf=require("fs");  
 var util = require('util');
 var events = require('events');
 var Interface = require('./interface');
@@ -145,6 +146,38 @@ Bus.prototype.getInterface = function(serviceName, objectPath, interfaceName, ca
 			if (callback)
 				callback(null, iface);
 		});
+	});
+};
+
+Bus.prototype.getLocalInterface = function(serviceName, objectPath, interfaceName, xmlFileName, callback) {
+	var self = this;
+
+	if (self.interfaces[serviceName + ':' + objectPath + ':' +interfaceName]) {
+		if (callback)
+			process.nextTick(function() {
+				callback(null, self.interfaces[serviceName + ':' + objectPath + ':' +interfaceName]);
+			});
+
+		return;
+	}
+	
+
+	var introspect = rf.readFileSync(xmlFileName,"utf-8");
+	var obj = self.dbus.parseIntrospectSource(introspect);
+	
+	if (!obj || !(interfaceName in obj)) {
+		callback(new Error('No such interface'));
+		return ;
+	}
+
+	// Create a interface object based on introspect
+	var iface = new Interface(self, serviceName, objectPath, interfaceName, obj[interfaceName]);
+	iface.init(function() {
+
+		self.interfaces[serviceName + ':' + objectPath + ':' +interfaceName] = iface;
+
+		if (callback)
+			callback(null, iface);
 	});
 };
 

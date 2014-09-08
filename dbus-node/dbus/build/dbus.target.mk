@@ -32,9 +32,9 @@ CFLAGS_CC_Debug := \
 	-fno-exceptions
 
 INCS_Debug := \
-	-I/usr/include/nodejs/src \
-	-I/usr/include/nodejs/deps/uv/include \
-	-I/usr/include/nodejs/deps/v8/include
+	-I/home/fjz/.node-gyp/0.10.30/src \
+	-I/home/fjz/.node-gyp/0.10.30/deps/uv/include \
+	-I/home/fjz/.node-gyp/0.10.30/deps/v8/include
 
 DEFS_Release := \
 	'-D_LARGEFILE_SOURCE' \
@@ -66,9 +66,9 @@ CFLAGS_CC_Release := \
 	-fno-exceptions
 
 INCS_Release := \
-	-I/usr/include/nodejs/src \
-	-I/usr/include/nodejs/deps/uv/include \
-	-I/usr/include/nodejs/deps/v8/include
+	-I/home/fjz/.node-gyp/0.10.30/src \
+	-I/home/fjz/.node-gyp/0.10.30/deps/uv/include \
+	-I/home/fjz/.node-gyp/0.10.30/deps/v8/include
 
 OBJS := \
 	$(obj).target/$(TARGET)/src/dbus.o \

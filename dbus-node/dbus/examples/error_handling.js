@@ -8,10 +8,10 @@ bus.getInterface('nodejs.dbus.ExampleService', '/nodejs/dbus/ExampleService', 'n
 
 	iface.MakeError['timeout'] = 1000;
 	iface.MakeError['error'] = function(err) {
-		console.log(err);
+		console.log('in error:' + err);
 	};
 	iface.MakeError['finish'] = function(result) {
-		console.log(result);
+		console.log('in result:' + result);
 	};
 	iface.MakeError();
 
